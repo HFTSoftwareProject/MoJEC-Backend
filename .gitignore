@@ -21,3 +21,7 @@ nbbuild/
 dist/
 nbdist/
 .nb-gradle/
+
+
+### MoJEC Specific ###
+src/main/resources/application-local.properties
