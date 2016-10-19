@@ -1,5 +1,6 @@
 package de.hftstuttgart.restcontroller;
 
+import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,6 +10,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("v1/test")
 public class RunAnt {
+   private static final Logger LOG = Logger.getLogger(GetResults.class);
 
    /**
     * localhost:8080/v1/test
@@ -19,7 +21,7 @@ public class RunAnt {
       try {
          Runtime.getRuntime().exec("sh runant.sh");
       } catch (IOException e) {
-         e.printStackTrace();
+         LOG.error("Failed to run runant.sh script.", e);
       }
    }
 }
