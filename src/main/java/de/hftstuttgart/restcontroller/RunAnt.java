@@ -10,7 +10,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("v1/test")
 public class RunAnt {
-   private static final Logger LOG = Logger.getLogger(GetResults.class);
+   private static final Logger LOG = Logger.getLogger(RunAnt.class);
 
    /**
     * localhost:8080/v1/test
