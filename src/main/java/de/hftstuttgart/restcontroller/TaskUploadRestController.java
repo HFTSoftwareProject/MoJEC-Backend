@@ -28,7 +28,7 @@ public class TaskUploadRestController {
             taskFileRef.transferTo(taskFile);
             LOG.info("Uploaded File: " + taskFile);
         } catch (IOException e) {
-            LOG.error("Failed to upload file " + taskFile);
+            LOG.error("Failed to upload file " + taskFile, e);
         }
 
     }
