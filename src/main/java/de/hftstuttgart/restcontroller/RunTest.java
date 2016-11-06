@@ -15,7 +15,6 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -24,7 +23,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("v1/test")
@@ -34,8 +32,8 @@ public class RunTest {
    @Value("${mojec.dir.uut}")
    private String uutDirPath;
 
-   @Value("${mojec.dir.results}")
-   private String resultDirPath;
+   @Value("${mojec.path.results}")
+   private String resultsPath;
 
    /**
     * Runs the uploaded JUnit tests on the uploaded tasks.
@@ -98,7 +96,7 @@ public class RunTest {
    private void writeTestResultsToFile(List<TestResult> testResults) throws IOException {
       Gson gson = new Gson();
       String resultJson = gson.toJson(testResults);
-      Files.write(Paths.get(resultDirPath), resultJson.getBytes());
+      Files.write(Paths.get(resultsPath), resultJson.getBytes());
    }
 
    private String[] getFilePathsToCompile(File dir) {
