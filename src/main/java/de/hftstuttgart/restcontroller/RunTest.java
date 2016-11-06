@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -101,13 +102,8 @@ public class RunTest {
    }
 
    private String[] getFilePathsToCompile(File dir) {
-      List<File> javaFiles = Arrays.asList(dir.listFiles((dir1, name) -> name.toLowerCase().endsWith(".java")));
-      List<String> pathsList = new ArrayList<>();
-      pathsList.addAll(javaFiles.stream().map(File::getAbsolutePath).collect(Collectors.toList()));
-      String[] pathsArray = new String[pathsList.size()];
-      for (int i = 0; i < pathsList.size(); i++) {
-         pathsArray[i] = pathsList.get(i);
-      }
+      File[] javaFiles = dir.listFiles((dir1, name) -> StringUtils.endsWithIgnoreCase(name, ".java"));
+      String[] pathsArray = Arrays.stream(javaFiles).map(File::getAbsolutePath).toArray(String[]::new);
       return pathsArray;
    }
 }
