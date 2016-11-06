@@ -16,16 +16,16 @@ import java.io.IOException;
 @RequestMapping("/v1/unittest")
 @MultipartConfig()
 public class UnitTestUpload {
-   private static final Logger LOG = Logger.getLogger(UnitTestUpload.class);
+    private static final Logger LOG = Logger.getLogger(UnitTestUpload.class);
 
-   // For now we use the same path for the unit tests and the task uploads
-   @Value("${mojec.dir.uut}")
-   private String uutDirPath;
+    // For now we use the same path for the unit tests and the task uploads
+    @Value("${mojec.dir.uut}")
+    private String uutDirPath;
 
-   @RequestMapping(method = RequestMethod.POST)
-   public void uploadUnitTestFile(@RequestParam("unitTestFile") MultipartFile unitTestFileRef) throws IOException {
-      File file = new File(uutDirPath, unitTestFileRef.getOriginalFilename());
-      unitTestFileRef.transferTo(file);
-      LOG.info("Uploaded unit test file: " + file);
-   }
+    @RequestMapping(method = RequestMethod.POST)
+    public void uploadUnitTestFile(@RequestParam("unitTestFile") MultipartFile unitTestFileRef) throws IOException {
+        File file = new File(uutDirPath, unitTestFileRef.getOriginalFilename());
+        unitTestFileRef.transferTo(file);
+        LOG.info("Uploaded unit test file: " + file);
+    }
 }

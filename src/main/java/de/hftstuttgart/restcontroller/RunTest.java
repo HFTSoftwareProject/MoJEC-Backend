@@ -27,81 +27,81 @@ import java.util.List;
 @RestController
 @RequestMapping("v1/test")
 public class RunTest {
-   private static final Logger LOG = Logger.getLogger(RunTest.class);
+    private static final Logger LOG = Logger.getLogger(RunTest.class);
 
-   @Value("${mojec.dir.uut}")
-   private String uutDirPath;
+    @Value("${mojec.dir.uut}")
+    private String uutDirPath;
 
-   @Value("${mojec.path.results}")
-   private String resultsPath;
+    @Value("${mojec.path.results}")
+    private String resultsPath;
 
-   /**
-    * Runs the uploaded JUnit tests on the uploaded tasks.
-    */
-   @RequestMapping(method = RequestMethod.POST)
-   private List<TestResult> runUnitTests() throws IOException, ClassNotFoundException {
-      File dir = new File(uutDirPath);
-      String[] paths = getFilePathsToCompile(dir);
+    /**
+     * Runs the uploaded JUnit tests on the uploaded tasks.
+     */
+    @RequestMapping(method = RequestMethod.POST)
+    private List<TestResult> runUnitTests() throws IOException, ClassNotFoundException {
+        File dir = new File(uutDirPath);
+        String[] paths = getFilePathsToCompile(dir);
 
-      JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-      // TODO we can collect the output stream to analyze it in case of an compilation error
-      int compilerResult = compiler.run(null, null, null, paths);
-      if (compilerResult != 0) {
-         LOG.warn("Compilation failed");
-      }
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        // TODO we can collect the output stream to analyze it in case of an compilation error
+        int compilerResult = compiler.run(null, null, null, paths);
+        if (compilerResult != 0) {
+            LOG.warn("Compilation failed");
+        }
 
-      // Load compiled classes into classloader
-      URL url = dir.toURI().toURL();
-      URL[] urls = {url};
-      ClassLoader classLoader = new URLClassLoader(urls);
+        // Load compiled classes into classloader
+        URL url = dir.toURI().toURL();
+        URL[] urls = {url};
+        ClassLoader classLoader = new URLClassLoader(urls);
 
-      List<String> classNames = new ArrayList<>();
-      for (String path : paths) {
-         Path p = Paths.get(path);
-         String fileName = p.getFileName().toString();
-         classNames.add(fileName.substring(0, fileName.indexOf(".")));
-      }
+        List<String> classNames = new ArrayList<>();
+        for (String path : paths) {
+            Path p = Paths.get(path);
+            String fileName = p.getFileName().toString();
+            classNames.add(fileName.substring(0, fileName.indexOf(".")));
+        }
 
-      // Separate test classes and tasks
-      List<String> tests = new ArrayList<>();
-      List<String> tasks = new ArrayList<>();
-      for (String name : classNames) {
-         if (name.toLowerCase().endsWith("test")) {
-            tests.add(name);
-         } else {
-            tasks.add(name);
-         }
-      }
+        // Separate test classes and tasks
+        List<String> tests = new ArrayList<>();
+        List<String> tasks = new ArrayList<>();
+        for (String name : classNames) {
+            if (name.toLowerCase().endsWith("test")) {
+                tests.add(name);
+            } else {
+                tasks.add(name);
+            }
+        }
 
-      // Run JUnit tests
-      JUnitCore junit = new JUnitCore();
-      List<TestResult> testResults = new ArrayList<>();
-      for (String testName : tests) {
-         LOG.info("Running JUnit test " + testName);
-         Class<?> junitTestClass = Class.forName(testName, true, classLoader);
-         Result junitResult = junit.run(junitTestClass);
+        // Run JUnit tests
+        JUnitCore junit = new JUnitCore();
+        List<TestResult> testResults = new ArrayList<>();
+        for (String testName : tests) {
+            LOG.info("Running JUnit test " + testName);
+            Class<?> junitTestClass = Class.forName(testName, true, classLoader);
+            Result junitResult = junit.run(junitTestClass);
 
-         TestResult testResult = new TestResult();
-         testResult.setTestName(testName);
-         testResult.setTestCount(junitResult.getRunCount());
-         testResult.setFailureCount(junitResult.getFailureCount());
-         testResult.setTestFailures(junitResult.getFailures());
+            TestResult testResult = new TestResult();
+            testResult.setTestName(testName);
+            testResult.setTestCount(junitResult.getRunCount());
+            testResult.setFailureCount(junitResult.getFailureCount());
+            testResult.setTestFailures(junitResult.getFailures());
 
-         testResults.add(testResult);
-      }
-      writeTestResultsToFile(testResults);
-      return testResults;
-   }
+            testResults.add(testResult);
+        }
+        writeTestResultsToFile(testResults);
+        return testResults;
+    }
 
-   private void writeTestResultsToFile(List<TestResult> testResults) throws IOException {
-      Gson gson = new Gson();
-      String resultJson = gson.toJson(testResults);
-      Files.write(Paths.get(resultsPath), resultJson.getBytes());
-   }
+    private void writeTestResultsToFile(List<TestResult> testResults) throws IOException {
+        Gson gson = new Gson();
+        String resultJson = gson.toJson(testResults);
+        Files.write(Paths.get(resultsPath), resultJson.getBytes());
+    }
 
-   private String[] getFilePathsToCompile(File dir) {
-      File[] javaFiles = dir.listFiles((dir1, name) -> StringUtils.endsWithIgnoreCase(name, ".java"));
-      String[] pathsArray = Arrays.stream(javaFiles).map(File::getAbsolutePath).toArray(String[]::new);
-      return pathsArray;
-   }
+    private String[] getFilePathsToCompile(File dir) {
+        File[] javaFiles = dir.listFiles((dir1, name) -> StringUtils.endsWithIgnoreCase(name, ".java"));
+        String[] pathsArray = Arrays.stream(javaFiles).map(File::getAbsolutePath).toArray(String[]::new);
+        return pathsArray;
+    }
 }
