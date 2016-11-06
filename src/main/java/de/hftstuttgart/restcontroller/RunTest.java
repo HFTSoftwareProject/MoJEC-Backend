@@ -1,5 +1,6 @@
 package de.hftstuttgart.restcontroller;
 
+import com.google.gson.Gson;
 import de.hftstuttgart.models.TestResult;
 import org.apache.log4j.Logger;
 import org.junit.runner.JUnitCore;
@@ -12,9 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -30,11 +33,14 @@ public class RunTest {
    @Value("${mojec.dir.uut}")
    private String uutDirPath;
 
+   @Value("${mojec.dir.results}")
+   private String resultDirPath;
+
    /**
     * Runs the uploaded JUnit tests on the uploaded tasks.
     */
    @RequestMapping(method = RequestMethod.POST)
-   private List<TestResult> runUnitTests() throws MalformedURLException, ClassNotFoundException {
+   private List<TestResult> runUnitTests() throws IOException, ClassNotFoundException {
       File dir = new File(uutDirPath);
       String[] paths = getFilePathsToCompile(dir);
 
@@ -84,7 +90,14 @@ public class RunTest {
 
          testResults.add(testResult);
       }
+      writeTestResultsToFile(testResults);
       return testResults;
+   }
+
+   private void writeTestResultsToFile(List<TestResult> testResults) throws IOException {
+      Gson gson = new Gson();
+      String resultJson = gson.toJson(testResults);
+      Files.write(Paths.get(resultDirPath), resultJson.getBytes());
    }
 
    private String[] getFilePathsToCompile(File dir) {
