@@ -16,7 +16,7 @@ import java.nio.file.Paths;
 public class GetResults {
     private static final Logger LOG = Logger.getLogger(GetResults.class);
 
-    @Value("${mojec.dir.results}")
+    @Value("${mojec.path.results}")
     private String resultsDir;
 
     /**
