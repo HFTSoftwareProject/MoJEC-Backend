@@ -2,6 +2,8 @@ package de.hftstuttgart;
 
 import com.google.gson.Gson;
 import de.hftstuttgart.models.TestResult;
+import de.hftstuttgart.models.User;
+import de.hftstuttgart.models.UserResult;
 import org.apache.log4j.Logger;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
@@ -25,7 +27,7 @@ public class JUnitTestHelper {
 
     private static final Logger LOG = Logger.getLogger(JUnitTestHelper.class);
 
-    public List<TestResult> runUnitTests(String uutDirPath, String resultPath) throws IOException, ClassNotFoundException {
+    public List<TestResult> runUnitTests(String uutDirPath, String resultPath, User user) throws IOException, ClassNotFoundException {
         File dir = new File(uutDirPath);
         String[] paths = getFilePathsToCompile(dir);
 
@@ -75,13 +77,14 @@ public class JUnitTestHelper {
 
             testResults.add(testResult);
         }
-        writeTestResultsToFile(testResults, resultPath);
+        writeTestResultsToFile(testResults, resultPath,user);
         return testResults;
     }
 
-    private void writeTestResultsToFile(List<TestResult> testResults, String resultsPath) throws IOException {
+    private void writeTestResultsToFile(List<TestResult> testResults, String resultsPath,User user) throws IOException {
+        UserResult userResult = new UserResult(user,testResults);
         Gson gson = new Gson();
-        String resultJson = gson.toJson(testResults);
+        String resultJson = gson.toJson(userResult);
         Files.write(Paths.get(resultsPath), resultJson.getBytes());
     }
 
