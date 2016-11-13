@@ -1,45 +1,55 @@
 package de.hftstuttgart;
 
 import com.google.gson.Gson;
+import de.hftstuttgart.models.CompilationError;
 import de.hftstuttgart.models.TestResult;
 import de.hftstuttgart.models.User;
 import de.hftstuttgart.models.UserResult;
 import org.apache.log4j.Logger;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 
-import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
+import javax.tools.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class JUnitTestHelper {
 
     private static final Logger LOG = Logger.getLogger(JUnitTestHelper.class);
 
+    private final String COMPILER_OUTPUT_FOLDER = "compiledFiles";
+
+    private CompilationError compilationError;
+
     public List<TestResult> runUnitTests(String uutDirPath, String resultPath, User user) throws IOException, ClassNotFoundException {
         File dir = new File(uutDirPath);
-        String[] paths = getFilePathsToCompile(dir);
+        List<String> paths = getFilePathsToCompile(dir);
 
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        // TODO we can collect the output stream to analyze it in case of an compilation error
-        int compilerResult = compiler.run(null, null, null, paths);
-        if (compilerResult != 0) {
+        // Compile the tests and the task classes
+        File compileOutputDir = new File(uutDirPath + File.separator + COMPILER_OUTPUT_FOLDER);
+        Boolean compileResult = compile(paths, compileOutputDir);
+
+        if (compileResult) {
+            LOG.info("Compilation successful");
+        } else {
+            // We can't work if the compilation failed.
             LOG.warn("Compilation failed");
+            TestResult testResult = new TestResult();
+            testResult.setCompilationError(compilationError);
+            return Collections.singletonList(testResult);
         }
 
         // Load compiled classes into classloader
-        URL url = dir.toURI().toURL();
+        URL url = compileOutputDir.toURI().toURL();
         URL[] urls = {url};
         ClassLoader classLoader = new URLClassLoader(urls);
 
@@ -74,6 +84,7 @@ public class JUnitTestHelper {
             testResult.setTestCount(junitResult.getRunCount());
             testResult.setFailureCount(junitResult.getFailureCount());
             testResult.setTestFailures(junitResult.getFailures());
+            testResult.setCompilationError(compilationError);
 
             testResults.add(testResult);
         }
@@ -81,17 +92,51 @@ public class JUnitTestHelper {
         return testResults;
     }
 
+    private Boolean compile(List<String> pathsToCompile, File compileDir) {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+
+        MyDiagnosticListener listener = new MyDiagnosticListener();
+        StandardJavaFileManager fileManager = compiler.getStandardFileManager(listener, null, Charset.forName("UTF-8"));
+
+        Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjectsFromStrings(pathsToCompile);
+
+        if (!compileDir.exists()) {
+            compileDir.mkdir();
+        }
+        List<String> options = new ArrayList<>();
+        options.add("-d");
+        options.add(compileDir.getAbsolutePath());
+
+            JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, listener, options, null, fileObjects);
+        return task.call();
+    }
+
     private void writeTestResultsToFile(List<TestResult> testResults, String resultsPath,User user) throws IOException {
-        UserResult userResult = new UserResult(user,testResults);
+        UserResult userResult = new UserResult(user, testResults);
         Gson gson = new Gson();
         String resultJson = gson.toJson(userResult);
         Files.write(Paths.get(resultsPath), resultJson.getBytes());
     }
 
-    private String[] getFilePathsToCompile(File dir) {
+    private List<String> getFilePathsToCompile(File dir) {
         File[] javaFiles = dir.listFiles((dir1, name) -> StringUtils.endsWithIgnoreCase(name, ".java"));
-        String[] pathsArray = Arrays.stream(javaFiles).map(File::getAbsolutePath).toArray(String[]::new);
+        List<String> pathsArray = Arrays.stream(javaFiles).map(File::getAbsolutePath).collect(Collectors.toList());
         return pathsArray;
     }
 
+
+    private class MyDiagnosticListener implements DiagnosticListener {
+        public void report(Diagnostic diagnostic) {
+            compilationError = new CompilationError();
+            compilationError.setCode(diagnostic.getCode());
+            compilationError.setColumnNumber(diagnostic.getColumnNumber());
+            compilationError.setLineNumber(diagnostic.getLineNumber());
+            compilationError.setKind(diagnostic.getKind().toString());
+            compilationError.setPosition(diagnostic.getPosition());
+            compilationError.setStartPosition(diagnostic.getStartPosition());
+            compilationError.setEndPosition(diagnostic.getEndPosition());
+            compilationError.setSource(diagnostic.getSource().toString());
+            compilationError.setMessage(diagnostic.getMessage(Locale.ENGLISH));
+        }
+    }
 }
