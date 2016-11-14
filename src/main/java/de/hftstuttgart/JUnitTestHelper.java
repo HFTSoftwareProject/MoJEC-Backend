@@ -6,11 +6,14 @@ import de.hftstuttgart.models.UserResult;
 import org.apache.log4j.Logger;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 import org.springframework.util.StringUtils;
 
 import javax.tools.*;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
@@ -68,11 +71,14 @@ public class JUnitTestHelper {
             Class<?> junitTestClass = Class.forName(testName, true, classLoader);
             Result junitResult = junit.run(junitTestClass);
 
+            List<String> successfulTestNames = getSuccessfulTestNames(junitTestClass.getDeclaredMethods(), junitResult.getFailures());
+
             TestResult testResult = new TestResult();
             testResult.setTestName(testName);
             testResult.setTestCount(junitResult.getRunCount());
             testResult.setFailureCount(junitResult.getFailureCount());
             testResult.setTestFailures(junitResult.getFailures());
+            testResult.setSuccessfulTests(successfulTestNames);
 
             testResults.add(testResult);
         }
@@ -80,6 +86,21 @@ public class JUnitTestHelper {
         UserResult userResult = new UserResult(user, testResults);
         userResult.setCompilationErrors(compilationErrors);
         return userResult;
+    }
+
+    private List<String> getSuccessfulTestNames(Method[] methods, List<Failure> failures) {
+        List<Method> publicMethods = Arrays.stream(methods)
+                .filter(method -> Modifier.isPublic(method.getModifiers()))
+                .collect(Collectors.toList());
+        for (Failure failure : failures) {
+            publicMethods.removeIf(method -> method.getName().equals(failure.getDescription().getMethodName()));
+        }
+
+        List<String> successfulTestNames = publicMethods.stream()
+                .map(Method::getName)
+                .collect(Collectors.toList());
+
+        return successfulTestNames;
     }
 
     private void compile(List<String> pathsToCompile, File compileDir) {

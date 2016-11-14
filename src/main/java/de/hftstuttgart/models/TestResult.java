@@ -9,6 +9,7 @@ public class TestResult {
     private String testName;
     private int testCount;
     private int failureCount;
+    private List<String> successfulTests;
     private List<Failure> testFailures;
 
     public String getTestName() {
@@ -33,6 +34,14 @@ public class TestResult {
 
     public void setFailureCount(int failureCount) {
         this.failureCount = failureCount;
+    }
+
+    public List<String> getSuccessfulTests() {
+        return successfulTests;
+    }
+
+    public void setSuccessfulTests(List<String> successfulTests) {
+        this.successfulTests = successfulTests;
     }
 
     public List<Failure> getTestFailures() {
