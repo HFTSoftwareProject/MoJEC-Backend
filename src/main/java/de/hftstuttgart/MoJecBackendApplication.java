@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import org.junit.ComparisonFailure;
+import org.junit.runner.notification.Failure;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +31,8 @@ public class MoJecBackendApplication {
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
         builder.indentOutput(true)
                 .serializationInclusion(JsonInclude.Include.NON_NULL) // Don’t include null values
-                .serializerByType(Diagnostic.class, new DiagnosticSerializer());
+                .serializerByType(Diagnostic.class, new DiagnosticSerializer())
+                .serializerByType(Failure.class, new FailureSerializer());
         return builder;
     }
 
@@ -48,6 +51,26 @@ public class MoJecBackendApplication {
             gen.writeNumberField("endPosition", diagnostic.getEndPosition());
             gen.writeEndObject();
 
+        }
+    }
+
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    private class FailureSerializer extends JsonSerializer<Failure> {
+        @Override
+        public void serialize(Failure failure, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+            gen.writeStartObject();
+            gen.writeStringField("testHeader", failure.getTestHeader());
+            gen.writeStringField("message", failure.getMessage());
+            gen.writeStringField("trace", failure.getTrace());
+
+            Throwable exception = failure.getException();
+            if (exception instanceof ComparisonFailure) {
+                gen.writeStringField("expected", ((ComparisonFailure) exception).getExpected());
+                gen.writeStringField("actual", ((ComparisonFailure) exception).getActual());
+            }
+
+
+            gen.writeEndObject();
         }
     }
 }

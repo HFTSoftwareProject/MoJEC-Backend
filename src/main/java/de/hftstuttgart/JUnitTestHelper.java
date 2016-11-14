@@ -101,6 +101,7 @@ public class JUnitTestHelper {
         JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, listener, options, null, fileObjects);
         Boolean compileResult = task.call();
         if (!compileResult) {
+            // If the compilation failed, remove the failed file from the pathsToCompile list and try to compile again
             File file = new File(((JavaFileObject) compilationErrors.get(compilationErrors.size() - 1).getSource()).toUri().getPath());
             LOG.warn("Compilation of file '" + file.getPath() + "' failed");
             pathsToCompile.removeIf(path -> path.equalsIgnoreCase(file.getPath()));
