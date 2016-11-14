@@ -1,12 +1,13 @@
 package de.hftstuttgart.models;
 
+import javax.tools.Diagnostic;
 import java.util.List;
 
 public class UserResult {
 
     private User user;
     private List<TestResult> testResults;
-    private List<CompilationError> compilationErrors;
+    private List<Diagnostic> compilationErrors;
 
     public UserResult(User user, List<TestResult> testResults) {
         this.user = user;
@@ -29,11 +30,13 @@ public class UserResult {
         this.testResults = testResults;
     }
 
-    public List<CompilationError> getCompilationErrors() {
+    public List<Diagnostic> getCompilationErrors() {
         return compilationErrors;
     }
 
-    public void setCompilationErrors(List<CompilationError> compilationErrors) {
+    public void setCompilationErrors(List<Diagnostic> compilationErrors) {
         this.compilationErrors = compilationErrors;
     }
+
+
 }

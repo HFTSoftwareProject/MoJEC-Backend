@@ -1,6 +1,5 @@
 package de.hftstuttgart;
 
-import de.hftstuttgart.models.CompilationError;
 import de.hftstuttgart.models.TestResult;
 import de.hftstuttgart.models.User;
 import de.hftstuttgart.models.UserResult;
@@ -20,7 +19,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class JUnitTestHelper {
@@ -29,7 +27,7 @@ public class JUnitTestHelper {
 
     private final String COMPILER_OUTPUT_FOLDER = "compiledFiles";
 
-    private List<CompilationError> compilationErrors;
+    private List<Diagnostic> compilationErrors;
 
     public UserResult runUnitTests(String uutDirPath, User user) throws IOException, ClassNotFoundException {
         File dir = new File(uutDirPath);
@@ -84,29 +82,26 @@ public class JUnitTestHelper {
         return userResult;
     }
 
-    /**
-     * @param pathsToCompile
-     * @param compileDir
-     */
     private void compile(List<String> pathsToCompile, File compileDir) {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-
         MyDiagnosticListener listener = new MyDiagnosticListener();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(listener, null, Charset.forName("UTF-8"));
-
         Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjectsFromStrings(pathsToCompile);
 
         if (!compileDir.exists()) {
             compileDir.mkdir();
         }
+
+        // Set the compiler option for a specific output path
         List<String> options = new ArrayList<>();
         options.add("-d");
         options.add(compileDir.getAbsolutePath());
 
+        // compile it
         JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, listener, options, null, fileObjects);
-        Boolean success = task.call();
-        if (!success) {
-            File file = compilationErrors.get(compilationErrors.size() - 1).getFile();
+        Boolean compileResult = task.call();
+        if (!compileResult) {
+            File file = new File(((JavaFileObject) compilationErrors.get(compilationErrors.size() - 1).getSource()).toUri().getPath());
             LOG.warn("Compilation of file '" + file.getPath() + "' failed");
             pathsToCompile.removeIf(path -> path.equalsIgnoreCase(file.getPath()));
             if (pathsToCompile.size() > 0) {
@@ -121,27 +116,12 @@ public class JUnitTestHelper {
         return pathsArray;
     }
 
-    /**
-     * Custom listener for compilation errors.
-     */
     private class MyDiagnosticListener implements DiagnosticListener {
         public void report(Diagnostic diagnostic) {
-            CompilationError compilationError = new CompilationError(
-                    diagnostic.getCode(),
-                    diagnostic.getColumnNumber(),
-                    diagnostic.getKind().toString(),
-                    diagnostic.getLineNumber(),
-                    diagnostic.getMessage(Locale.ENGLISH),
-                    diagnostic.getPosition(),
-                    new File(((JavaFileObject) diagnostic.getSource()).toUri().getPath()),
-                    diagnostic.getEndPosition(),
-                    diagnostic.getStartPosition()
-            );
             if (compilationErrors == null) {
                 compilationErrors = new ArrayList<>();
             }
-
-            compilationErrors.add(compilationError);
+            compilationErrors.add(diagnostic);
         }
     }
 }
