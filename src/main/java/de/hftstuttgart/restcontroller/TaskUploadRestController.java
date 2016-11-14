@@ -31,7 +31,7 @@ public class TaskUploadRestController {
     private String resultPath;
 
     @RequestMapping(method = RequestMethod.POST)
-    public List<TestResult> uploadFile(@RequestParam("taskFile") MultipartFile taskFileRef, @RequestParam("user") String userJson) {
+    public List<TestResult> uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef, @RequestParam("user") String userJson) {
         File taskFile = new File(uutDirPath, taskFileRef.getOriginalFilename());
         Gson gson= new Gson();
         User user = gson.fromJson(userJson, User.class);
