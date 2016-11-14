@@ -1,19 +1,20 @@
 package de.hftstuttgart;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import de.hftstuttgart.models.TestResult;
 import de.hftstuttgart.models.User;
 import de.hftstuttgart.models.UserResult;
 import org.apache.log4j.Logger;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
-import org.springframework.beans.factory.annotation.Value;
+import org.junit.runner.notification.Failure;
 import org.springframework.util.StringUtils;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -83,9 +84,31 @@ public class JUnitTestHelper {
 
     private void writeTestResultsToFile(List<TestResult> testResults, String resultsPath,User user) throws IOException {
         UserResult userResult = new UserResult(user,testResults);
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().registerTypeAdapter(Failure.class, new FailureSerializer()).create();
         String resultJson = gson.toJson(userResult);
         Files.write(Paths.get(resultsPath), resultJson.getBytes());
+    }
+
+    /**
+     * Serializes a {@link Failure}.
+     *
+     * We are (for now) only interested in:
+     * <ul>
+     *     <li>testHeader - The test method name</li>
+     *     <li>message - A optional message summarizing the thrown Exception</li>
+     *     <li>trace - The stack trace of the Exception as a String</li>
+     * </ul>
+     *
+     */
+    private static class FailureSerializer implements JsonSerializer<Failure> {
+        @Override
+        public JsonElement serialize(Failure src, Type typeOfSrc, JsonSerializationContext context) {
+            JsonObject result = new JsonObject();
+            result.addProperty("testHeader", src.getTestHeader());
+            result.addProperty("message", src.getMessage());
+            result.addProperty("trace", src.getTrace());
+            return result;
+        }
     }
 
     private String[] getFilePathsToCompile(File dir) {
