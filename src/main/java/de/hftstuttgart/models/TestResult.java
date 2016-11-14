@@ -9,7 +9,6 @@ public class TestResult {
     private String testName;
     private int testCount;
     private int failureCount;
-    private CompilationError compilationError;
     private List<Failure> testFailures;
 
     public String getTestName() {
@@ -30,14 +29,6 @@ public class TestResult {
 
     public int getFailureCount() {
         return failureCount;
-    }
-
-    public CompilationError getCompilationError() {
-        return compilationError;
-    }
-
-    public void setCompilationError(CompilationError compilationError) {
-        this.compilationError = compilationError;
     }
 
     public void setFailureCount(int failureCount) {

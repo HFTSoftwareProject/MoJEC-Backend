@@ -1,5 +1,7 @@
 package de.hftstuttgart.models;
 
+import java.io.File;
+
 public class CompilationError {
 
     private String code;
@@ -8,9 +10,21 @@ public class CompilationError {
     private long lineNumber;
     private String message;
     private long position;
-    private String source;
+    private File file;
     private long endPosition;
     private long startPosition;
+
+    public CompilationError(String code, long columnNumber, String kind, long lineNumber, String message, long position, File file, long endPosition, long startPosition) {
+        this.code = code;
+        this.columnNumber = columnNumber;
+        this.kind = kind;
+        this.lineNumber = lineNumber;
+        this.message = message;
+        this.position = position;
+        this.file = file;
+        this.endPosition = endPosition;
+        this.startPosition = startPosition;
+    }
 
     public String getCode() {
         return code;
@@ -60,12 +74,12 @@ public class CompilationError {
         this.position = position;
     }
 
-    public String getSource() {
-        return source;
+    public File getFile() {
+        return file;
     }
 
-    public void setSource(String source) {
-        this.source = source;
+    public void setFile(File file) {
+        this.file = file;
     }
 
     public long getEndPosition() {
