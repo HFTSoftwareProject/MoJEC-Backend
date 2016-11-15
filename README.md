@@ -1,7 +1,12 @@
 # MoJEC-Backend
 
-## Development Hints
+## Usage
+### Conventions
+1. The JUnit test classes cannot be organized in packages. Tasks and helper classes can use packages.
+2. JUnit test classes need to be named ...Test.java all other classes cannot end with "Test" or "test"
 
+
+## Development Hints
 ### Local application configuration
 We're using the **application.properties** file to configure our application.
 
