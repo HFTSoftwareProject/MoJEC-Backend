@@ -1,5 +1,6 @@
 package de.hftstuttgart;
 
+import com.google.common.io.Files;
 import de.hftstuttgart.models.TestResult;
 import de.hftstuttgart.models.User;
 import de.hftstuttgart.models.UserResult;
@@ -17,10 +18,9 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,41 +32,28 @@ public class JUnitTestHelper {
 
     private List<Diagnostic> compilationErrors;
 
-    public UserResult runUnitTests(String uutDirPath, User user) throws IOException, ClassNotFoundException {
-        File dir = new File(uutDirPath);
-        List<String> paths = getFilePathsToCompile(dir);
-
+    public UserResult runUnitTests(String unitTestDir, List<File> taskFiles, User user) throws IOException, ClassNotFoundException {
         // Compile the tests and the task classes
-        File compileOutputDir = new File(uutDirPath + File.separator + COMPILER_OUTPUT_FOLDER);
-        compile(paths, compileOutputDir);
+        File compileOutputDir = new File(unitTestDir + File.separator + COMPILER_OUTPUT_FOLDER);
+
+        List<File> unitTestFiles = getUnitTestFiles(unitTestDir);
+        List<File> filesToCompile = new ArrayList<>();
+        filesToCompile.addAll(taskFiles);
+        filesToCompile.addAll(unitTestFiles);
+
+        compile(filesToCompile, compileOutputDir);
 
         // Load compiled classes into classloader
         URL url = compileOutputDir.toURI().toURL();
         URL[] urls = {url};
         ClassLoader classLoader = new URLClassLoader(urls);
 
-        List<String> classNames = new ArrayList<>();
-        for (String path : paths) {
-            Path p = Paths.get(path);
-            String fileName = p.getFileName().toString();
-            classNames.add(fileName.substring(0, fileName.indexOf(".")));
-        }
-
-        // Separate test classes and tasks
-        List<String> tests = new ArrayList<>();
-        List<String> tasks = new ArrayList<>();
-        for (String name : classNames) {
-            if (name.toLowerCase().endsWith("test")) {
-                tests.add(name);
-            } else {
-                tasks.add(name);
-            }
-        }
-
         // Run JUnit tests
         JUnitCore junit = new JUnitCore();
         List<TestResult> testResults = new ArrayList<>();
-        for (String testName : tests) {
+
+        for (File test : unitTestFiles) {
+            String testName = Files.getNameWithoutExtension(test.getPath());
             LOG.info("Running JUnit test " + testName);
             Class<?> junitTestClass = Class.forName(testName, true, classLoader);
             Result junitResult = junit.run(junitTestClass);
@@ -103,33 +90,43 @@ public class JUnitTestHelper {
         return successfulTestNames;
     }
 
-    private void compile(List<String> pathsToCompile, File compileDir) {
+    private void compile(List<File> files, File outputDir) {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         MyDiagnosticListener listener = new MyDiagnosticListener();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(listener, null, Charset.forName("UTF-8"));
-        Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjectsFromStrings(pathsToCompile);
+        File[] fileArray = new File[files.size()];
+        fileArray = files.toArray(fileArray);
+        Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjects(fileArray);
 
-        if (!compileDir.exists()) {
-            compileDir.mkdir();
+        if (!outputDir.exists()) {
+            outputDir.mkdir();
         }
 
         // Set the compiler option for a specific output path
         List<String> options = new ArrayList<>();
         options.add("-d");
-        options.add(compileDir.getAbsolutePath());
+        options.add(outputDir.getAbsolutePath());
 
         // compile it
         JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, listener, options, null, fileObjects);
         Boolean compileResult = task.call();
         if (!compileResult) {
             // If the compilation failed, remove the failed file from the pathsToCompile list and try to compile again
-            File file = new File(((JavaFileObject) compilationErrors.get(compilationErrors.size() - 1).getSource()).toUri().getPath());
-            LOG.warn("Compilation of file '" + file.getPath() + "' failed");
-            pathsToCompile.removeIf(path -> path.equalsIgnoreCase(file.getPath()));
-            if (pathsToCompile.size() > 0) {
-                compile(pathsToCompile, compileDir);
+            File currentFile = new File(((JavaFileObject) compilationErrors.get(compilationErrors.size() - 1).getSource()).toUri().getPath());
+            LOG.warn("Compilation of file '" + currentFile.getPath() + "' failed");
+            files.removeIf(file -> file.getPath().equalsIgnoreCase(currentFile.getPath()));
+            if (files.size() > 0) {
+                compile(files, outputDir);
             }
         }
+    }
+
+    private List<File> getUnitTestFiles(String unitTestDirPath) {
+        File dir = new File(unitTestDirPath);
+        File[] unitTestFilesArray = dir.listFiles((dir1, name) -> StringUtils.endsWithIgnoreCase(name, "test.java"));
+        List<File> unitTestFiles = new ArrayList<>();
+        Collections.addAll(unitTestFiles, unitTestFilesArray);
+        return unitTestFiles;
     }
 
     private List<String> getFilePathsToCompile(File dir) {
