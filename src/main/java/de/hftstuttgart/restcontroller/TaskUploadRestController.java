@@ -47,11 +47,13 @@ public class TaskUploadRestController {
         Gson gson= new Gson();
         User user = gson.fromJson(userJson, User.class);
         LOG.info("Uploaded File: " + taskFile);
-
+        UserResult userResult = null;
         JUnitTestHelper testHelper = new JUnitTestHelper();
-        UserResult userResult = testHelper.runUnitTests(uutDirPath, unzippedFiles, user);
-
-        deleteCreatedFiles(unzippedFiles, testHelper.getCompileOutputDir());
+        try {
+            userResult = testHelper.runUnitTests(uutDirPath, unzippedFiles, user);
+        } finally {
+            deleteCreatedFiles(unzippedFiles, testHelper.getCompileOutputDir());
+        }
 
         return userResult;
 
