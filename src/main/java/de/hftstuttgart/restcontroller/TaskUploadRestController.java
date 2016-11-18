@@ -2,7 +2,7 @@ package de.hftstuttgart.restcontroller;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
-import de.hftstuttgart.JUnitTestHelper;
+import de.hftstuttgart.utils.JUnitTestHelper;
 import de.hftstuttgart.exceptions.FileTypeNotSupportedException;
 import de.hftstuttgart.models.User;
 import de.hftstuttgart.models.UserResult;
@@ -51,7 +51,31 @@ public class TaskUploadRestController {
         JUnitTestHelper testHelper = new JUnitTestHelper();
         UserResult userResult = testHelper.runUnitTests(uutDirPath, unzippedFiles, user);
 
+        deleteCreatedFiles(unzippedFiles, testHelper.getCompileOutputDir());
+
         return userResult;
+
+    }
+
+    private void deleteCreatedFiles(List<File> unzippedFiles, File compileOutputDir) {
+        // Delete all .java files
+        for (File file : unzippedFiles) {
+            if (file.exists()) {
+                file.delete();
+            }
+        }
+
+        // delete compiler output dir. Currently only one flat folder is supported
+        if (compileOutputDir.exists()) {
+            // Delete all containing files
+            for (File file : compileOutputDir.listFiles()) {
+                if (file.exists()) {
+                    file.delete();
+                }
+            }
+            // Delete the directory.
+            compileOutputDir.delete();
+        }
 
     }
 }

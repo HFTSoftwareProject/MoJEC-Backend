@@ -42,7 +42,7 @@ public class UnzipUtil {
                 String fileName = zipEntry.getName();
                 File unzippedFile = new File(outputFolder + File.separator + fileName);
 
-                System.out.println("file unzip : " + unzippedFile.getAbsoluteFile());
+                LOG.info("Unzipped file: " + unzippedFile.getName());
 
                 //create all non exists folders
                 //else you will hit FileNotFoundException for compressed folder
@@ -63,8 +63,6 @@ public class UnzipUtil {
 
             zipInputStream.closeEntry();
             zipInputStream.close();
-
-            System.out.println("Done");
 
             zipFile.delete();
 
