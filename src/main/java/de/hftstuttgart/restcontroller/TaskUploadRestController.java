@@ -4,7 +4,6 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 import de.hftstuttgart.utils.JUnitTestHelper;
 import de.hftstuttgart.exceptions.FileTypeNotSupportedException;
-import de.hftstuttgart.models.User;
 import de.hftstuttgart.models.UserResult;
 import de.hftstuttgart.utils.UnzipUtil;
 import org.apache.log4j.Logger;
@@ -33,7 +32,7 @@ public class TaskUploadRestController {
     private String resultPath;
 
     @RequestMapping(method = RequestMethod.POST)
-    public UserResult uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef, @RequestParam("user") String userJson) throws IOException, ClassNotFoundException {
+    public UserResult uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef) throws IOException, ClassNotFoundException {
         File taskFile = new File(uutDirPath, taskFileRef.getOriginalFilename());
         taskFileRef.transferTo(taskFile);
         String fileExtension = Files.getFileExtension(taskFile.getName());
@@ -45,12 +44,11 @@ public class TaskUploadRestController {
         List<File> unzippedFiles = UnzipUtil.unzip(taskFile);
 
         Gson gson= new Gson();
-        User user = gson.fromJson(userJson, User.class);
         LOG.info("Uploaded File: " + taskFile);
         UserResult userResult = null;
         JUnitTestHelper testHelper = new JUnitTestHelper();
         try {
-            userResult = testHelper.runUnitTests(uutDirPath, unzippedFiles, user);
+            userResult = testHelper.runUnitTests(uutDirPath, unzippedFiles);
         } finally {
             deleteCreatedFiles(unzippedFiles, testHelper.getCompileOutputDir());
         }
