@@ -5,22 +5,14 @@ import java.util.List;
 
 public class UserResult {
 
-    private User user;
     private List<TestResult> testResults;
     private List<Diagnostic> compilationErrors;
 
-    public UserResult(User user, List<TestResult> testResults) {
-        this.user = user;
+    public UserResult(List<TestResult> testResults) {
+
         this.testResults = testResults;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 
     public List<TestResult> getTestResults() {
         return testResults;

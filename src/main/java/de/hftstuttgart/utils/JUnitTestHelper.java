@@ -2,7 +2,7 @@ package de.hftstuttgart.utils;
 
 import com.google.common.io.Files;
 import de.hftstuttgart.models.TestResult;
-import de.hftstuttgart.models.User;
+
 import de.hftstuttgart.models.UserResult;
 import org.apache.log4j.Logger;
 import org.junit.runner.JUnitCore;
@@ -30,7 +30,7 @@ public class JUnitTestHelper {
     private List<Diagnostic> compilationErrors;
     public File compileOutputDir;
 
-    public UserResult runUnitTests(String unitTestDir, List<File> taskFiles, User user)
+    public UserResult runUnitTests(String unitTestDir, List<File> taskFiles)
             throws IOException, ClassNotFoundException {
 
         List<File> unitTestFiles = getUnitTestFiles(unitTestDir);
@@ -68,7 +68,7 @@ public class JUnitTestHelper {
             testResults.add(testResult);
         }
 
-        UserResult userResult = new UserResult(user, testResults);
+        UserResult userResult = new UserResult(testResults);
         userResult.setCompilationErrors(compilationErrors);
         return userResult;
     }
