@@ -105,13 +105,16 @@ public class JUnitTestHelper {
         options.add("-d");
         options.add(outputDir.getAbsolutePath());
 
+        options.add("-classpath");
+        options.add("/home/cp/junit-4.12.jar"); // TODO this path should not be hard coded
+
         // compile it
         JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, listener, options, null, fileObjects);
         Boolean compileResult = task.call();
         if (!compileResult) {
             // If the compilation failed, remove the failed file from the pathsToCompile list and try to compile again
             File currentFile = new File(((JavaFileObject) compilationErrors.get(compilationErrors.size() - 1).getSource()).toUri().getPath());
-            LOG.warn("Compilation of file '" + currentFile.getPath() + "' failed");
+            LOG.warn("Compilation of file '" + currentFile.getPath() + "' failed: " + compilationErrors);
             files.removeIf(file -> file.getPath().equalsIgnoreCase(currentFile.getPath()));
             if (files.size() > 0) {
                 compile(files, outputDir);
