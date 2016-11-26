@@ -7,6 +7,7 @@ import de.hftstuttgart.exceptions.FileTypeNotSupportedException;
 import de.hftstuttgart.models.UserResult;
 import de.hftstuttgart.utils.UnzipUtil;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -31,6 +32,9 @@ public class TaskUploadRestController {
     @Value("${mojec.path.results}")
     private String resultPath;
 
+    @Autowired
+    private JUnitTestHelper testHelper;
+
     @RequestMapping(method = RequestMethod.POST)
     public UserResult uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef) throws IOException, ClassNotFoundException {
         File taskFile = new File(uutDirPath, taskFileRef.getOriginalFilename());
@@ -46,7 +50,6 @@ public class TaskUploadRestController {
         Gson gson= new Gson();
         LOG.info("Uploaded File: " + taskFile);
         UserResult userResult = null;
-        JUnitTestHelper testHelper = new JUnitTestHelper();
         try {
             userResult = testHelper.runUnitTests(uutDirPath, unzippedFiles);
         } finally {

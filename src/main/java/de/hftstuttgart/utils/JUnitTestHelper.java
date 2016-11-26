@@ -8,6 +8,9 @@ import org.apache.log4j.Logger;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.tools.*;
@@ -21,14 +24,22 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Component
 public class JUnitTestHelper {
 
     private static final Logger LOG = Logger.getLogger(JUnitTestHelper.class);
 
-    private final String COMPILER_OUTPUT_FOLDER_PREFIX = "compiledFiles_";
+    private static final String COMPILER_OUTPUT_FOLDER_PREFIX = "compiledFiles_";
+
+    private final String junitLibDirPath;
 
     private List<Diagnostic> compilationErrors;
     public File compileOutputDir;
+
+    @Autowired
+    public JUnitTestHelper(@Value("${mojec.dir.junit}") String junitLibDirPath) {
+        this.junitLibDirPath = junitLibDirPath;
+    }
 
     public UserResult runUnitTests(String unitTestDir, List<File> taskFiles)
             throws IOException, ClassNotFoundException {
@@ -44,7 +55,8 @@ public class JUnitTestHelper {
         // Load compiled classes into classloader
         URL url = compileOutputDir.toURI().toURL();
         URL[] urls = {url};
-        ClassLoader classLoader = new URLClassLoader(urls);
+        // It's important to set the context loader as parent, otherwise the test runs will fail
+        ClassLoader classLoader = new URLClassLoader(urls, Thread.currentThread().getContextClassLoader());
 
         // Run JUnit tests
         JUnitCore junit = new JUnitCore();
@@ -53,7 +65,7 @@ public class JUnitTestHelper {
         for (File test : unitTestFiles) {
             String testName = Files.getNameWithoutExtension(test.getPath());
             LOG.info("Running JUnit test " + testName);
-            Class<?> junitTestClass = Class.forName(testName, true, classLoader);
+            Class<?> junitTestClass = classLoader.loadClass(testName);
             Result junitResult = junit.run(junitTestClass);
 
             List<String> successfulTestNames = getSuccessfulTestNames(junitTestClass.getDeclaredMethods(), junitResult.getFailures());
@@ -104,6 +116,11 @@ public class JUnitTestHelper {
         List<String> options = new ArrayList<>();
         options.add("-d");
         options.add(outputDir.getAbsolutePath());
+        options.add("-cp");
+        String cp = buildClassPath(junitLibDirPath, compileOutputDir.getAbsolutePath());
+        LOG.debug("Classpath for compilation: " + cp);
+        options.add(cp);
+
 
         // compile it
         JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, listener, options, null, fileObjects);
@@ -117,6 +134,33 @@ public class JUnitTestHelper {
                 compile(files, outputDir);
             }
         }
+    }
+
+    /**
+     * This function builds a classpath from the passed Strings
+     *
+     * @param paths classpath elements
+     * @return returns the complete classpath with wildcards expanded
+     */
+    private static String buildClassPath(String... paths) {
+        StringBuilder sb = new StringBuilder();
+        for (String path : paths) {
+            if (path.endsWith("*")) {
+                path = path.substring(0, path.length() - 1);
+                File pathFile = new File(path);
+                for (File file : pathFile.listFiles()) {
+                    if (file.isFile() && file.getName().endsWith(".jar")) {
+                        sb.append(path);
+                        sb.append(file.getName());
+                        sb.append(System.getProperty("path.separator"));
+                    }
+                }
+            } else {
+                sb.append(path);
+                sb.append(System.getProperty("path.separator"));
+            }
+        }
+        return sb.toString();
     }
 
     private List<File> getUnitTestFiles(String unitTestDirPath) {
