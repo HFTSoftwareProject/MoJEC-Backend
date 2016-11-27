@@ -32,8 +32,8 @@ public class TaskUploadRestController {
     @Value("${mojec.path.results}")
     private String resultPath;
 
-    @Autowired
-    private JUnitTestHelper testHelper;
+    @Value("${mojec.dir.junit}")
+    private String junitLibDirPath;
 
     @RequestMapping(method = RequestMethod.POST)
     public UserResult uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef) throws IOException, ClassNotFoundException {
@@ -48,6 +48,7 @@ public class TaskUploadRestController {
         List<File> unzippedFiles = UnzipUtil.unzip(taskFile);
 
         Gson gson= new Gson();
+        JUnitTestHelper testHelper = new JUnitTestHelper(junitLibDirPath);
         LOG.info("Uploaded File: " + taskFile);
         UserResult userResult = null;
         try {
