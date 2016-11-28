@@ -62,8 +62,20 @@ public class JUnitTestHelper {
         JUnitCore junit = new JUnitCore();
         List<TestResult> testResults = new ArrayList<>();
 
-        for (File test : unitTestFiles) {
-            String testName = Files.getNameWithoutExtension(test.getPath());
+        for (File testFile : unitTestFiles) {
+            boolean currentTestCompiled = true;
+            // Check if the current test was successfully compiled
+            for (Diagnostic error : compilationErrors) {
+                File failedCompilationFile = new File((((JavaFileObject) error.getSource()).toUri().getPath()));
+                if (failedCompilationFile.getAbsolutePath().equals(testFile.getAbsolutePath())) {
+                    currentTestCompiled = false;
+                }
+            }
+            if (!currentTestCompiled) {
+                break;
+            }
+
+            String testName = Files.getNameWithoutExtension(testFile.getPath());
             LOG.info("Running JUnit test " + testName);
             Class<?> junitTestClass = classLoader.loadClass(testName);
             Result junitResult = junit.run(junitTestClass);
