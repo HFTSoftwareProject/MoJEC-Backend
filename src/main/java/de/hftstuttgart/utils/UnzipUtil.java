@@ -21,7 +21,7 @@ public class UnzipUtil {
 
     private static final Logger LOG = Logger.getLogger(UnzipUtil.class);
 
-    public static List<File> unzip(File zipFile) {
+    public static List<File> unzip(File zipFile) throws IOException {
 
         String outputFolder = zipFile.getParentFile().getAbsolutePath();
         List<File> unzippedFiles = new ArrayList<>();
@@ -74,10 +74,6 @@ public class UnzipUtil {
             String msg = "Failed to unzip file " + zipFile;
             LOG.error(msg);
             throw new CorruptedZipFileException(msg);
-        } catch (IOException ex) {
-            LOG.error(ex);
         }
-
-        return null;
     }
 }
