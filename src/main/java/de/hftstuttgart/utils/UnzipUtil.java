@@ -1,5 +1,6 @@
 package de.hftstuttgart.utils;
 
+import de.hftstuttgart.exceptions.CorruptedZipFileException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 
 /**
@@ -50,9 +52,9 @@ public class UnzipUtil {
 
                 FileOutputStream fos = new FileOutputStream(unzippedFile);
 
-                int len;
-                while ((len = zipInputStream.read(buffer)) > 0) {
-                    fos.write(buffer, 0, len);
+                int length;
+                while ((length = zipInputStream.read(buffer)) > 0) {
+                    fos.write(buffer, 0, length);
                 }
 
                 fos.close();
@@ -68,8 +70,12 @@ public class UnzipUtil {
 
             return unzippedFiles;
 
+        } catch (ZipException ze) {
+            String msg = "Failed to unzip file " + zipFile;
+            LOG.error(msg);
+            throw new CorruptedZipFileException(msg);
         } catch (IOException ex) {
-            ex.printStackTrace();
+            LOG.error(ex);
         }
 
         return null;
