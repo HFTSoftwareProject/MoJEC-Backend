@@ -1,5 +1,6 @@
 package de.hftstuttgart.restcontroller;
 
+import de.hftstuttgart.utils.UnzipUtil;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,5 +28,7 @@ public class UnitTestUpload {
         File file = new File(uutDirPath, unitTestFileRef.getOriginalFilename());
         unitTestFileRef.transferTo(file);
         LOG.info("Uploaded unit test file: " + file);
+
+        UnzipUtil.unzip(file);
     }
 }
