@@ -33,7 +33,7 @@ public class JUnitTestHelper {
 
     private final String junitLibDirPath;
 
-    private List<Diagnostic> compilationErrors;
+    private List<Diagnostic> compilationErrors = new ArrayList<>();
     public File compileOutputDir;
 
     @Autowired
@@ -189,9 +189,6 @@ public class JUnitTestHelper {
 
     private class MyDiagnosticListener implements DiagnosticListener {
         public void report(Diagnostic diagnostic) {
-            if (compilationErrors == null) {
-                compilationErrors = new ArrayList<>();
-            }
             compilationErrors.add(diagnostic);
         }
     }
