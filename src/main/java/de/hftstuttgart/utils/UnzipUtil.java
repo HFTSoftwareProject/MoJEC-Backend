@@ -1,6 +1,7 @@
 package de.hftstuttgart.utils;
 
 import de.hftstuttgart.exceptions.CorruptedZipFileException;
+import de.hftstuttgart.exceptions.NoZipFileException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -27,18 +28,22 @@ public class UnzipUtil {
         List<File> unzippedFiles = new ArrayList<>();
 
         byte[] buffer = new byte[1024];
+
+        //create output directory is not exists
+        File folder = new File(zipFile.getAbsolutePath());
+        if (!folder.exists()) {
+            folder.mkdir();
+        }
+
+        //get the zip file content
+        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
+        //get the zipped file list entry
+        ZipEntry zipEntry = zipInputStream.getNextEntry();
+
         try {
-            //create output directory is not exists
-            File folder = new File(zipFile.getAbsolutePath());
-            if (!folder.exists()) {
-                folder.mkdir();
+            if (zipEntry == null) {
+                throw new NoZipFileException("The file " + zipFile.getAbsolutePath() + " seems to not be a zip file");
             }
-
-            //get the zip file content
-            ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
-            //get the zipped file list entry
-            ZipEntry zipEntry = zipInputStream.getNextEntry();
-
             while (zipEntry != null) {
 
                 String fileName = zipEntry.getName();
@@ -63,10 +68,9 @@ public class UnzipUtil {
                 unzippedFiles.add(unzippedFile);
             }
 
-            zipInputStream.closeEntry();
-            zipInputStream.close();
-
-            zipFile.delete();
+            if (zipFile.exists()) {
+                zipFile.delete();
+            }
 
             return unzippedFiles;
 
@@ -74,6 +78,9 @@ public class UnzipUtil {
             String msg = "Failed to unzip file " + zipFile;
             LOG.error(msg);
             throw new CorruptedZipFileException(msg);
+        } finally {
+            zipInputStream.closeEntry();
+            zipInputStream.close();
         }
     }
 }

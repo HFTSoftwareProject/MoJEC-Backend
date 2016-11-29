@@ -1,7 +1,6 @@
 package de.hftstuttgart.restcontroller;
 
 import com.google.common.io.Files;
-import com.google.gson.Gson;
 import de.hftstuttgart.exceptions.FileTypeNotSupportedException;
 import de.hftstuttgart.models.UserResult;
 import de.hftstuttgart.utils.JUnitTestHelper;
@@ -43,10 +42,9 @@ public class TaskUploadRestController {
 
         List<File> unzippedFiles = UnzipUtil.unzip(taskFile);
 
-        Gson gson= new Gson();
         JUnitTestHelper testHelper = new JUnitTestHelper(junitLibDirPath);
         LOG.info("Uploaded File: " + taskFile);
-        UserResult userResult = null;
+        UserResult userResult;
         try {
             userResult = testHelper.runUnitTests(uutDirPath, unzippedFiles);
         } finally {

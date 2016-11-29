@@ -41,8 +41,7 @@ public class JUnitTestHelper {
         this.junitLibDirPath = junitLibDirPath;
     }
 
-    public UserResult runUnitTests(String unitTestDir, List<File> taskFiles)
-            throws IOException, ClassNotFoundException {
+    public UserResult runUnitTests(String unitTestDir, List<File> taskFiles) throws IOException, ClassNotFoundException {
 
         List<File> unitTestFiles = getUnitTestFiles(unitTestDir);
         List<File> filesToCompile = new ArrayList<>();
