@@ -12,25 +12,21 @@ import java.util.zip.ZipInputStream;
 /**
  * Created by Marcel Bochtler on 29.11.16.
  */
-public class ZipFileHelper {
+public class FileTypeChecker {
 
     /**
-     * Gets the ZipInputStream from a File.
      * Checks if the file is really a zip file.
      */
-    public static ZipInputStream getZipInputStream(File file) throws IOException {
+    public static void checkZipFile(File file) throws IOException {
 
         String fileExtension = Files.getFileExtension(file.getName());
         if (!"zip".equals(fileExtension)) {
             throw new FileTypeNotSupportedException("The file type " + fileExtension + " is not supported. Only 'zip' is supported.");
         }
 
-        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(file));
-        if (zipInputStream.getNextEntry() == null) {
+        boolean isZipped = new ZipInputStream(new FileInputStream(file)).getNextEntry() != null;
+        if (!isZipped) {
             throw new NoZipFileException("The file " + file.getAbsolutePath() + " seems to not be a zip file");
         }
-
-        return zipInputStream;
-
     }
 }

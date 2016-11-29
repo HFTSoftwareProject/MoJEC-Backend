@@ -4,6 +4,7 @@ import de.hftstuttgart.exceptions.CorruptedZipFileException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,6 +21,9 @@ public class UnzipUtil {
 
     private static final Logger LOG = Logger.getLogger(UnzipUtil.class);
 
+    /**
+     * Unzips files and saves them to the disk,
+     */
     public static List<File> unzip(File zipFile) throws IOException {
 
         String outputFolder = zipFile.getParentFile().getAbsolutePath();
@@ -33,7 +37,8 @@ public class UnzipUtil {
             folder.mkdir();
         }
 
-        ZipInputStream zipInputStream = ZipFileHelper.getZipInputStream(zipFile);
+        FileTypeChecker.checkZipFile(zipFile);
+        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
         ZipEntry zipEntry = zipInputStream.getNextEntry();
 
         try {
