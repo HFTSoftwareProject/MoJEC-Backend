@@ -1,11 +1,9 @@
 package de.hftstuttgart.utils;
 
 import de.hftstuttgart.exceptions.CorruptedZipFileException;
-import de.hftstuttgart.exceptions.NoZipFileException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,20 +33,13 @@ public class UnzipUtil {
             folder.mkdir();
         }
 
-        //get the zip file content
-        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
-        //get the zipped file list entry
+        ZipInputStream zipInputStream = ZipFileHelper.getZipInputStream(zipFile);
         ZipEntry zipEntry = zipInputStream.getNextEntry();
 
         try {
-            if (zipEntry == null) {
-                throw new NoZipFileException("The file " + zipFile.getAbsolutePath() + " seems to not be a zip file");
-            }
             while (zipEntry != null) {
-
                 String fileName = zipEntry.getName();
                 File unzippedFile = new File(outputFolder + File.separator + fileName);
-
                 LOG.info("Unzipped file: " + unzippedFile.getName());
 
                 //create all non exists folders
@@ -56,7 +47,6 @@ public class UnzipUtil {
                 new File(unzippedFile.getParent()).mkdirs();
 
                 FileOutputStream fos = new FileOutputStream(unzippedFile);
-
                 int length;
                 while ((length = zipInputStream.read(buffer)) > 0) {
                     fos.write(buffer, 0, length);
@@ -64,7 +54,6 @@ public class UnzipUtil {
 
                 fos.close();
                 zipEntry = zipInputStream.getNextEntry();
-
                 unzippedFiles.add(unzippedFile);
             }
 

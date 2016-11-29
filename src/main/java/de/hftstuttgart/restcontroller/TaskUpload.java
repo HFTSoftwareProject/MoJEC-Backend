@@ -1,7 +1,5 @@
 package de.hftstuttgart.restcontroller;
 
-import com.google.common.io.Files;
-import de.hftstuttgart.exceptions.FileTypeNotSupportedException;
 import de.hftstuttgart.models.UserResult;
 import de.hftstuttgart.utils.JUnitTestHelper;
 import de.hftstuttgart.utils.UnzipUtil;
@@ -21,8 +19,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/task")
 @MultipartConfig()
-public class TaskUploadRestController {
-    private static final Logger LOG = Logger.getLogger(TaskUploadRestController.class);
+public class TaskUpload {
+    private static final Logger LOG = Logger.getLogger(TaskUpload.class);
 
     @Value("${mojec.dir.uut}")
     private String uutDirPath;
@@ -34,11 +32,6 @@ public class TaskUploadRestController {
     public UserResult uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef) throws IOException, ClassNotFoundException {
         File taskFile = new File(uutDirPath, taskFileRef.getOriginalFilename());
         taskFileRef.transferTo(taskFile);
-        String fileExtension = Files.getFileExtension(taskFile.getName());
-
-        if (!"zip".equals(fileExtension)) {
-            throw new FileTypeNotSupportedException("The file type " + fileExtension + " is not supported. Only 'zip' is supported.");
-        }
 
         List<File> unzippedFiles = UnzipUtil.unzip(taskFile);
 
