@@ -22,15 +22,15 @@ import java.util.List;
 public class TaskUpload {
     private static final Logger LOG = Logger.getLogger(TaskUpload.class);
 
-    @Value("${mojec.dir.uut}")
-    private String uutDirPath;
+    @Value("${mojec.dir.parent}")
+    private String parentPath;
 
     @Value("${mojec.dir.junit}")
     private String junitLibDirPath;
 
     @RequestMapping(method = RequestMethod.POST)
     public UserResult uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef) throws IOException, ClassNotFoundException {
-        File taskFile = new File(uutDirPath, taskFileRef.getOriginalFilename());
+        File taskFile = new File(parentPath, taskFileRef.getOriginalFilename());
         taskFileRef.transferTo(taskFile);
 
         List<File> unzippedFiles = UnzipUtil.unzip(taskFile);
@@ -39,7 +39,7 @@ public class TaskUpload {
         LOG.info("Uploaded File: " + taskFile);
         UserResult userResult;
         try {
-            userResult = testHelper.runUnitTests(uutDirPath, unzippedFiles);
+            userResult = testHelper.runUnitTests(parentPath, unzippedFiles);
         } finally {
             deleteCreatedFiles(unzippedFiles, testHelper.getCompileOutputDir());
         }
