@@ -2,7 +2,6 @@ package de.hftstuttgart.utils;
 
 import com.google.common.io.Files;
 import de.hftstuttgart.models.TestResult;
-
 import de.hftstuttgart.models.UserResult;
 import org.apache.log4j.Logger;
 import org.junit.runner.JUnitCore;
@@ -11,7 +10,6 @@ import org.junit.runner.notification.Failure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.tools.*;
 import java.io.File;
@@ -28,7 +26,6 @@ import java.util.stream.Collectors;
 public class JUnitTestHelper {
 
     private static final Logger LOG = Logger.getLogger(JUnitTestHelper.class);
-
     private static final String COMPILER_OUTPUT_FOLDER_PREFIX = "compiledFiles_";
 
     private final String junitLibDirPath;
@@ -41,14 +38,20 @@ public class JUnitTestHelper {
         this.junitLibDirPath = junitLibDirPath;
     }
 
-    public UserResult runUnitTests(String unitTestDir, List<File> taskFiles) throws IOException, ClassNotFoundException {
+    public UserResult runUnitTests(String parentPath,
+                                   String assignmentFolderPrefix,
+                                   String assignmentId,
+                                   String testFolderName,
+                                   List<File> taskFiles) throws IOException, ClassNotFoundException {
 
-        List<File> unitTestFiles = getUnitTestFiles(unitTestDir);
+        String assignmentDirPath = parentPath + File.separator + assignmentFolderPrefix + assignmentId;
+        List<File> unitTestFiles = getUnitTestFiles(assignmentDirPath, testFolderName);
         List<File> filesToCompile = new ArrayList<>();
         filesToCompile.addAll(taskFiles);
         filesToCompile.addAll(unitTestFiles);
 
-        compileOutputDir = new File(unitTestDir + File.separator + COMPILER_OUTPUT_FOLDER_PREFIX + UUID.randomUUID().toString());
+        // create temp folder for the compilation output
+        compileOutputDir = new File(assignmentDirPath + File.separator + COMPILER_OUTPUT_FOLDER_PREFIX + UUID.randomUUID().toString());
         compile(filesToCompile, compileOutputDir);
 
         // Load compiled classes into classloader
@@ -174,9 +177,10 @@ public class JUnitTestHelper {
         return sb.toString();
     }
 
-    private List<File> getUnitTestFiles(String unitTestDirPath) {
-        File dir = new File(unitTestDirPath);
-        File[] unitTestFilesArray = dir.listFiles((dir1, name) -> StringUtils.endsWithIgnoreCase(name, "test.java"));
+    private List<File> getUnitTestFiles(String assignmentDirPath, String testFolderName) {
+        String unitTestDirPath = assignmentDirPath + File.separator + testFolderName;
+        File unitTestDir = new File(unitTestDirPath);
+        File[] unitTestFilesArray = unitTestDir.listFiles();
         List<File> unitTestFiles = new ArrayList<>();
         Collections.addAll(unitTestFiles, unitTestFilesArray);
         return unitTestFiles;

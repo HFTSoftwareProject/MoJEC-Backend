@@ -15,6 +15,7 @@ import javax.servlet.annotation.MultipartConfig;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/task")
@@ -22,15 +23,23 @@ import java.util.List;
 public class TaskUpload {
     private static final Logger LOG = Logger.getLogger(TaskUpload.class);
 
-    @Value("${mojec.dir.uut}")
-    private String uutDirPath;
+    @Value("${mojec.dir.parent}")
+    private String parentPath;
 
     @Value("${mojec.dir.junit}")
     private String junitLibDirPath;
 
+    @Value("${mojec.dir.assignment.prefix}")
+    private String assignmentFolderPrefix;
+
+    @Value("${mojec.dir.test.folder.name}")
+    private String testFolderName;
+
     @RequestMapping(method = RequestMethod.POST)
-    public UserResult uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef) throws IOException, ClassNotFoundException {
-        File taskFile = new File(uutDirPath, taskFileRef.getOriginalFilename());
+    public UserResult uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef, @RequestParam("assignmentId") String assignmentId) throws IOException, ClassNotFoundException {
+        // Save the zip file in the assignment folder
+        String assignmentFolderPath = parentPath + File.separator + assignmentFolderPrefix + assignmentId;
+        File taskFile = new File(assignmentFolderPath, UUID.randomUUID() + "_" + taskFileRef.getOriginalFilename()); // add UUID to keep this file name unique
         taskFileRef.transferTo(taskFile);
 
         List<File> unzippedFiles = UnzipUtil.unzip(taskFile);
@@ -39,7 +48,7 @@ public class TaskUpload {
         LOG.info("Uploaded File: " + taskFile);
         UserResult userResult;
         try {
-            userResult = testHelper.runUnitTests(uutDirPath, unzippedFiles);
+            userResult = testHelper.runUnitTests(parentPath, assignmentFolderPrefix, assignmentId, testFolderName, unzippedFiles);
         } finally {
             deleteCreatedFiles(unzippedFiles, testHelper.getCompileOutputDir());
         }

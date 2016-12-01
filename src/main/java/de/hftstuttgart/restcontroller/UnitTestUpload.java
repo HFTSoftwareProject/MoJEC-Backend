@@ -19,16 +19,24 @@ import java.io.IOException;
 public class UnitTestUpload {
     private static final Logger LOG = Logger.getLogger(UnitTestUpload.class);
 
-    // For now we use the same path for the unit tests and the task uploads
-    @Value("${mojec.dir.uut}")
-    private String uutDirPath;
+    @Value("${mojec.dir.parent}")
+    private String parentDir;
+
+    @Value("${mojec.dir.assignment.prefix}")
+    private String folderNamePrefix;
+
+    @Value("${mojec.dir.test.folder.name}")
+    private String testFolderName;
 
     @RequestMapping(method = RequestMethod.POST)
-    public void uploadUnitTestFile(@RequestParam("unitTestFile") MultipartFile unitTestFileRef) throws IOException {
-        File file = new File(uutDirPath, unitTestFileRef.getOriginalFilename());
+    public void uploadUnitTestFile(@RequestParam("unitTestFile") MultipartFile unitTestFileRef, @RequestParam("assignmentId") String assignmentId) throws IOException {
+        // Create one folder per assignment
+        String subFolderPath = parentDir + File.separator + folderNamePrefix + assignmentId + File.separator + testFolderName;
+        new File(subFolderPath).mkdirs();
+        File file = new File(subFolderPath, unitTestFileRef.getOriginalFilename());
         unitTestFileRef.transferTo(file);
-        LOG.info("Uploaded unit test file: " + file);
-
         UnzipUtil.unzip(file);
+
+        LOG.info("Uploaded unit test file: " + file);
     }
 }
