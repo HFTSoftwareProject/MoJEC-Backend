@@ -4,9 +4,11 @@ import com.google.common.io.Files;
 import de.hftstuttgart.models.TestResult;
 import de.hftstuttgart.models.UserResult;
 import org.apache.log4j.Logger;
+import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -14,8 +16,6 @@ import org.springframework.stereotype.Component;
 import javax.tools.*;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
@@ -80,9 +80,13 @@ public class JUnitTestHelper {
             String testName = Files.getNameWithoutExtension(testFile.getPath());
             LOG.info("Running JUnit test " + testName);
             Class<?> junitTestClass = classLoader.loadClass(testName);
-            Result junitResult = junit.run(junitTestClass);
 
-            List<String> successfulTestNames = getSuccessfulTestNames(junitTestClass.getDeclaredMethods(), junitResult.getFailures());
+            MyRunListener runListener = new MyRunListener();
+            junit.addListener(runListener);
+            Result junitResult = junit.run(junitTestClass);
+            junit.removeListener(runListener);
+
+            List<String> successfulTestNames = runListener.getSuccessFullTestNames();
 
             TestResult testResult = new TestResult();
             testResult.setTestName(testName);
@@ -97,21 +101,6 @@ public class JUnitTestHelper {
         UserResult userResult = new UserResult(testResults);
         userResult.setCompilationErrors(compilationErrors);
         return userResult;
-    }
-
-    private List<String> getSuccessfulTestNames(Method[] methods, List<Failure> failures) {
-        List<Method> publicMethods = Arrays.stream(methods)
-                .filter(method -> Modifier.isPublic(method.getModifiers()))
-                .collect(Collectors.toList());
-        for (Failure failure : failures) {
-            publicMethods.removeIf(method -> method.getName().equals(failure.getDescription().getMethodName()));
-        }
-
-        List<String> successfulTestNames = publicMethods.stream()
-                .map(Method::getName)
-                .collect(Collectors.toList());
-
-        return successfulTestNames;
     }
 
     private void compile(List<File> files, File outputDir) {
@@ -193,6 +182,34 @@ public class JUnitTestHelper {
     private class MyDiagnosticListener implements DiagnosticListener {
         public void report(Diagnostic diagnostic) {
             compilationErrors.add(diagnostic);
+        }
+    }
+
+    private static class MyRunListener extends RunListener {
+        private Set<Description> allTests = new LinkedHashSet<>();
+        private Set<Description> failedTests = new LinkedHashSet<>();
+
+        @Override
+        public void testFinished(Description description) throws Exception {
+            super.testFinished(description);
+            if (description.isTest()) {
+                allTests.add(description);
+            }
+        }
+
+        @Override
+        public void testFailure(Failure failure) throws Exception {
+            super.testFailure(failure);
+            Description description = failure.getDescription();
+            if (description != null && description.isTest()) {
+                failedTests.add(description);
+            }
+        }
+
+        List<String> getSuccessFullTestNames() {
+            Set<Description> tmp = new LinkedHashSet<>(allTests);
+            tmp.removeAll(failedTests);
+            return tmp.stream().map(Description::getMethodName).collect(Collectors.toList());
         }
     }
 }
