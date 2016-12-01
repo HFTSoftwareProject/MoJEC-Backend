@@ -1,4 +1,4 @@
-package de.hftstuttgart.restcontroller;
+package de.hftstuttgart.rest.v1.task;
 
 import de.hftstuttgart.models.UserResult;
 import de.hftstuttgart.utils.JUnitTestHelper;

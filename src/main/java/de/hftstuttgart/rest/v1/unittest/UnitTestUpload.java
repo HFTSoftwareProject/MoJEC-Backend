@@ -1,4 +1,4 @@
-package de.hftstuttgart.restcontroller;
+package de.hftstuttgart.rest.v1.unittest;
 
 import de.hftstuttgart.utils.UnzipUtil;
 import org.apache.log4j.Logger;
