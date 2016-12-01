@@ -6,7 +6,6 @@ RUN sh -c 'touch /app.jar'
 # Prepare environment.
 # Create needed folders
 RUN mkdir /home/mojec && \
-    mkdir /home/mojec/uut && \
     mkdir /home/mojec/libs
 
 # Download needed libs for compilation
