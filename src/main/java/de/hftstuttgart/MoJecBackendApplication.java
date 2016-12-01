@@ -15,7 +15,9 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Locale;
 
 @SpringBootApplication
@@ -46,7 +48,9 @@ public class MoJecBackendApplication {
             gen.writeNumberField("lineNumber", diagnostic.getLineNumber());
             gen.writeStringField("message", diagnostic.getMessage(Locale.ENGLISH));
             gen.writeNumberField("position", diagnostic.getPosition());
-            gen.writeStringField("filePath", ((JavaFileObject) diagnostic.getSource()).toUri().getPath());
+
+            URI uri = ((JavaFileObject) diagnostic.getSource()).toUri();
+            gen.writeStringField("javaFileName", new File(uri).getName());
             gen.writeNumberField("startPosition", diagnostic.getStartPosition());
             gen.writeNumberField("endPosition", diagnostic.getEndPosition());
             gen.writeEndObject();
