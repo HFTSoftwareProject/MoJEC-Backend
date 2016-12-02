@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.annotation.MultipartConfig;
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/unittest")
@@ -33,7 +34,7 @@ public class UnitTestUpload {
         // Create one folder per assignment
         String subFolderPath = parentDir + File.separator + folderNamePrefix + assignmentId + File.separator + testFolderName;
         new File(subFolderPath).mkdirs();
-        File file = new File(subFolderPath, unitTestFileRef.getOriginalFilename());
+        File file = new File(subFolderPath, String.valueOf(UUID.randomUUID()));
         unitTestFileRef.transferTo(file);
         UnzipUtil.unzip(file);
 

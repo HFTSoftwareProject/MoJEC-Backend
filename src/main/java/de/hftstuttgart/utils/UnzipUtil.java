@@ -1,6 +1,7 @@
 package de.hftstuttgart.utils;
 
 import de.hftstuttgart.exceptions.CorruptedZipFileException;
+import de.hftstuttgart.exceptions.NoZipFileException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -37,11 +38,15 @@ public class UnzipUtil {
             folder.mkdir();
         }
 
-        FileTypeChecker.checkZipFile(zipFile);
-        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
-        ZipEntry zipEntry = zipInputStream.getNextEntry();
+        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile))) {
+            ZipEntry zipEntry = zipInputStream.getNextEntry();
 
-        try {
+            if (zipEntry == null) {
+                String message = "The file " + zipFile.getAbsolutePath() + " does not seem be a zip file";
+                LOG.error(message);
+                throw new NoZipFileException(message);
+            }
+
             while (zipEntry != null) {
                 String fileName = zipEntry.getName();
                 File unzippedFile = new File(outputFolder + File.separator + fileName);
@@ -72,9 +77,6 @@ public class UnzipUtil {
             String msg = "Failed to unzip file " + zipFile;
             LOG.error(msg);
             throw new CorruptedZipFileException(msg);
-        } finally {
-            zipInputStream.closeEntry();
-            zipInputStream.close();
         }
     }
 }

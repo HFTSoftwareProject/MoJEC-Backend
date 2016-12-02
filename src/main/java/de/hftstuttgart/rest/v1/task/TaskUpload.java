@@ -39,7 +39,7 @@ public class TaskUpload {
     public UserResult uploadAndTestFile(@RequestParam("taskFile") MultipartFile taskFileRef, @RequestParam("assignmentId") String assignmentId) throws IOException, ClassNotFoundException {
         // Save the zip file in the assignment folder
         String assignmentFolderPath = parentPath + File.separator + assignmentFolderPrefix + assignmentId;
-        File taskFile = new File(assignmentFolderPath, UUID.randomUUID() + "_" + taskFileRef.getOriginalFilename()); // add UUID to keep this file name unique
+        File taskFile = new File(assignmentFolderPath, String.valueOf(UUID.randomUUID())); // UUID to keep this file name unique
         taskFileRef.transferTo(taskFile);
 
         List<File> unzippedFiles = UnzipUtil.unzip(taskFile);
