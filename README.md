@@ -2,8 +2,7 @@
 
 ## Usage
 ### Conventions
-1. The JUnit test classes cannot be organized in packages. Tasks and helper classes can use packages.
-2. JUnit test classes need to be named ...Test.java all other classes cannot end with "Test" or "test"
+- The JUnit test classes cannot be organized in packages. Tasks and helper classes can use packages.
 
 
 ## Development Hints
