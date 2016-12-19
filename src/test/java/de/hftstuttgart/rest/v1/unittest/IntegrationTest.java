@@ -9,6 +9,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -34,13 +35,41 @@ public class IntegrationTest {
     @Test
     public void validUnitTestFileTest() throws Exception {
 
-        File file = new File(Thread.currentThread().getContextClassLoader().getResource("tests.zip").getFile());
-        MockMultipartFile mockFile = new MockMultipartFile("unitTestFile", new FileInputStream(file));
-
+        // Upload tests
+        File unitTestFile = new File(Thread.currentThread().getContextClassLoader().getResource("tests.zip").getFile());
+        MockMultipartFile testFileMock = new MockMultipartFile("unitTestFile", new FileInputStream(unitTestFile));
         mockMvc.perform(MockMvcRequestBuilders.fileUpload("/v1/unittest")
-                .file(mockFile)
+                .file(testFileMock)
                 .param("assignmentId", "111"))
                 .andExpect(status().is(200));
+
+        // Upload tasks
+        File taskFile = new File(Thread.currentThread().getContextClassLoader().getResource("tasks.zip").getFile());
+        MockMultipartFile taskFileMock = new MockMultipartFile("taskFile", new FileInputStream(taskFile));
+        mockMvc.perform(MockMvcRequestBuilders.fileUpload("/v1/task")
+                .file(taskFileMock)
+                .param("assignmentId", "111"))
+                .andExpect(status().is(200))
+                .andExpect(MockMvcResultMatchers.content().string("{\n" +
+                        "  \"testResults\" : [ {\n" +
+                        "    \"testName\" : \"CalculatorTest\",\n" +
+                        "    \"testCount\" : 5,\n" +
+                        "    \"failureCount\" : 0,\n" +
+                        "    \"successfulTests\" : [ \"add\", \"div\", \"sub\", \"sum\", \"mult\" ],\n" +
+                        "    \"testFailures\" : [ ]\n" +
+                        "  } ],\n" +
+                        "  \"compilationErrors\" : [ {\n" +
+                        "    \"code\" : \"compiler.err.expected\",\n" +
+                        "    \"columnNumber\" : 0,\n" +
+                        "    \"kind\" : \"ERROR\",\n" +
+                        "    \"lineNumber\" : 0,\n" +
+                        "    \"message\" : \"';' expected\",\n" +
+                        "    \"position\" : 46,\n" +
+                        "    \"javaFileName\" : \"TaskNotCompilable.java\",\n" +
+                        "    \"startPosition\" : 46,\n" +
+                        "    \"endPosition\" : 46\n" +
+                        "  } ]\n" +
+                        "}"));
     }
 
     @Test
