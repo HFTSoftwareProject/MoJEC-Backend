@@ -9,13 +9,13 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
 import java.io.FileInputStream;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -50,7 +50,7 @@ public class IntegrationTest {
                 .file(taskFileMock)
                 .param("assignmentId", "111"))
                 .andExpect(status().is(200))
-                .andExpect(MockMvcResultMatchers.content().string("{\n" +
+                .andExpect(content().string("{\n" +
                         "  \"testResults\" : [ {\n" +
                         "    \"testName\" : \"CalculatorTest\",\n" +
                         "    \"testCount\" : 5,\n" +
@@ -58,17 +58,7 @@ public class IntegrationTest {
                         "    \"successfulTests\" : [ \"add\", \"div\", \"sub\", \"sum\", \"mult\" ],\n" +
                         "    \"testFailures\" : [ ]\n" +
                         "  } ],\n" +
-                        "  \"compilationErrors\" : [ {\n" +
-                        "    \"code\" : \"compiler.err.expected\",\n" +
-                        "    \"columnNumber\" : 0,\n" +
-                        "    \"kind\" : \"ERROR\",\n" +
-                        "    \"lineNumber\" : 0,\n" +
-                        "    \"message\" : \"';' expected\",\n" +
-                        "    \"position\" : 46,\n" +
-                        "    \"javaFileName\" : \"TaskNotCompilable.java\",\n" +
-                        "    \"startPosition\" : 46,\n" +
-                        "    \"endPosition\" : 46\n" +
-                        "  } ]\n" +
+                        "  \"compilationErrors\" : [ ]\n" +
                         "}"));
     }
 
