@@ -19,4 +19,5 @@ Afterwards configure the application to use the local profile using the run conf
 ### Integration tests
 MoJEC-Backend has some rudimentary API tests using [Spring Boot Testing](https://spring.io/blog/2016/04/15/testing-improvements-in-spring-boot-1-4). This tests assure that there won't be any regressions in the API when changing the backend code.
 
-To be able to run the integration tests the system where the tests are executed needs to be a *nix System because a `/tmp/` folder must exist. Also the needed libraries [JUnit](http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar) and [Hamcrest](http://central.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar) need to be downloaded into `/opt/mojec/junit/`
+To be able to run the integration tests the system where the tests are executed needs to be a *nix System because a `/tmp/` folder must exist. Also the needed libraries [JUnit](http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar) and [Hamcrest](http://central.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar) need to be downloaded into `/opt/mojec/junit/`.
+This is the reason why the tests are disabled by default. They can be enabled by setting `-DskipTests=false`
