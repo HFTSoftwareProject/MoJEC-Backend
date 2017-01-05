@@ -151,6 +151,7 @@ public class JUnitTestHelper {
             if (path.endsWith("*")) {
                 path = path.substring(0, path.length() - 1);
                 File pathFile = new File(path);
+                // TODO pathFile can be null if no lib folder is given
                 for (File file : pathFile.listFiles()) {
                     if (file.isFile() && file.getName().endsWith(".jar")) {
                         sb.append(path);

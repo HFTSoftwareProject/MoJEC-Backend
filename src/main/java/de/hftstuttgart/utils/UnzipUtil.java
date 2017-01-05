@@ -16,7 +16,7 @@ import java.util.zip.ZipInputStream;
 
 /**
  * Created by Marcel Bochtler on 13.11.16.
- * See: https://www.mkyong.com/java/how-to-decompress-files-from-a-zip-file/
+ * Based on: https://www.mkyong.com/java/how-to-decompress-files-from-a-zip-file/
  */
 public class UnzipUtil {
 
