@@ -17,6 +17,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Rest controller for everything related to the TASK files
+ */
 @RestController
 @RequestMapping("/v1/task")
 @MultipartConfig()
