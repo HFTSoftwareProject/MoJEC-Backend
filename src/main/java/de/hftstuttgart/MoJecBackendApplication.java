@@ -2,7 +2,6 @@ package de.hftstuttgart;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import org.junit.ComparisonFailure;
@@ -27,20 +26,26 @@ public class MoJecBackendApplication {
         SpringApplication.run(MoJecBackendApplication.class, args);
     }
 
+    /**
+     * Configuration for the Jackson JSON serializer
+     */
     @Bean
     @Primary
     public Jackson2ObjectMapperBuilder jacksonConfiguration() {
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
         builder.indentOutput(true)
-                .serializationInclusion(JsonInclude.Include.NON_NULL) // Don’t include null values
+                .serializationInclusion(JsonInclude.Include.NON_NULL) // Don’t include null values in the JSON
                 .serializerByType(Diagnostic.class, new DiagnosticSerializer())
                 .serializerByType(Failure.class, new FailureSerializer());
         return builder;
     }
 
+    /**
+     * Custom serializer for the {@link Diagnostic} class used by Jackson
+     */
     private class DiagnosticSerializer extends JsonSerializer<Diagnostic> {
         @Override
-        public void serialize(Diagnostic diagnostic, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+        public void serialize(Diagnostic diagnostic, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException {
             gen.writeStartObject();
             gen.writeStringField("code", diagnostic.getCode());
             gen.writeNumberField("columnNumber", diagnostic.getColumnNumber());
@@ -54,14 +59,15 @@ public class MoJecBackendApplication {
             gen.writeNumberField("startPosition", diagnostic.getStartPosition());
             gen.writeNumberField("endPosition", diagnostic.getEndPosition());
             gen.writeEndObject();
-
         }
     }
 
-    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    /**
+     * Custom serializer for the {@link Failure} class used by Jackson
+     */
     private class FailureSerializer extends JsonSerializer<Failure> {
         @Override
-        public void serialize(Failure failure, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+        public void serialize(Failure failure, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException {
             gen.writeStartObject();
             gen.writeStringField("testHeader", failure.getTestHeader());
             gen.writeStringField("message", failure.getMessage());
@@ -72,8 +78,6 @@ public class MoJecBackendApplication {
                 gen.writeStringField("expected", ((ComparisonFailure) exception).getExpected());
                 gen.writeStringField("actual", ((ComparisonFailure) exception).getActual());
             }
-
-
             gen.writeEndObject();
         }
     }

@@ -23,7 +23,8 @@ public class UnzipUtil {
     private static final Logger LOG = Logger.getLogger(UnzipUtil.class);
 
     /**
-     * Unzips files and saves them to the disk,
+     * Unzips files and saves them to the disk.
+     * Checks if the zip file is valid.
      */
     public static List<File> unzip(File zipFile) throws IOException {
 
@@ -52,8 +53,8 @@ public class UnzipUtil {
                 File unzippedFile = new File(outputFolder + File.separator + fileName);
                 LOG.info("Unzipped file: " + unzippedFile.getName());
 
-                //create all non exists folders
-                //else you will hit FileNotFoundException for compressed folder
+                // create all non exists folders
+                // else we will hit FileNotFoundException for compressed folder
                 new File(unzippedFile.getParent()).mkdirs();
 
                 FileOutputStream fos = new FileOutputStream(unzippedFile);

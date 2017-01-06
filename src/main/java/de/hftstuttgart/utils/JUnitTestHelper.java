@@ -38,14 +38,29 @@ public class JUnitTestHelper {
         this.junitLibDirPath = junitLibDirPath;
     }
 
+    /**
+     * Runs the JUnit tests and return the result
+     *
+     * @param parentPath                Path of the parent folder of the current assignment. Default: /tmp
+     * @param assignmentFolderPrefix    Prefix of the assignment subfolder
+     * @param assignmentId              ID of the current assignment
+     * @param testFolderName            Folder name of the unit test subfolder
+     * @param taskFiles                 List of unzipped .java files to be tested
+     *
+     * @return                          {@link UserResult} with a list of the {@link TestResult} of the executed UnitTests
+     *                                  and a List of {@link Diagnostic} with the not compilable task files
+     */
     public UserResult runUnitTests(String parentPath,
                                    String assignmentFolderPrefix,
                                    String assignmentId,
                                    String testFolderName,
                                    List<File> taskFiles) throws IOException, ClassNotFoundException {
 
+        // Get the path of the current assignment. E.g. /tmp/Assignment_123
         String assignmentDirPath = parentPath + File.separator + assignmentFolderPrefix + assignmentId;
         List<File> unitTestFiles = getUnitTestFiles(assignmentDirPath, testFolderName);
+
+        // Create list of all files we need to compile i.e. UnitTests and TaskFiles
         List<File> filesToCompile = new ArrayList<>();
         filesToCompile.addAll(taskFiles);
         filesToCompile.addAll(unitTestFiles);
@@ -63,10 +78,9 @@ public class JUnitTestHelper {
         // Run JUnit tests
         JUnitCore junit = new JUnitCore();
         List<TestResult> testResults = new ArrayList<>();
-
         for (File testFile : unitTestFiles) {
             boolean currentTestCompiled = true;
-            // Check if the current test was successfully compiled
+            // Check if the current test was successfully compiled. If not, continue with the next unit test
             for (Diagnostic error : compilationErrors) {
                 File failedCompilationFile = new File((((JavaFileObject) error.getSource()).toUri().getPath()));
                 if (failedCompilationFile.getAbsolutePath().equals(testFile.getAbsolutePath())) {
@@ -81,13 +95,14 @@ public class JUnitTestHelper {
             LOG.info("Running JUnit test " + testName);
             Class<?> junitTestClass = classLoader.loadClass(testName);
 
+            // Add the run listener to JUnit in order to be able to see the failures
             MyRunListener runListener = new MyRunListener();
             junit.addListener(runListener);
             Result junitResult = junit.run(junitTestClass);
             junit.removeListener(runListener);
 
+            // Build the result
             List<String> successfulTestNames = runListener.getSuccessFullTestNames();
-
             TestResult testResult = new TestResult();
             testResult.setTestName(testName);
             testResult.setTestCount(junitResult.getRunCount());
@@ -98,12 +113,18 @@ public class JUnitTestHelper {
             testResults.add(testResult);
         }
 
+        // Add the failed compilations to the result
         UserResult userResult = new UserResult(testResults);
         userResult.setCompilationErrors(compilationErrors);
         return userResult;
     }
 
+    /**
+     * @param files         Files to compile
+     * @param outputDir     Output folder where the .class files are stored.
+     */
     private void compile(List<File> files, File outputDir) {
+        // Create the compiler and add a diagnostic listener to get the compilation errors
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         MyDiagnosticListener listener = new MyDiagnosticListener();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(listener, null, Charset.forName("UTF-8"));
@@ -117,19 +138,19 @@ public class JUnitTestHelper {
 
         // Set the compiler option for a specific output path
         List<String> options = new ArrayList<>();
-        options.add("-d");
+        options.add("-d"); // output dir
         options.add(outputDir.getAbsolutePath());
-        options.add("-cp");
+        options.add("-cp"); // custom classpath
         String cp = buildClassPath(junitLibDirPath, compileOutputDir.getAbsolutePath());
         LOG.debug("Classpath for compilation: " + cp);
         options.add(cp);
 
-
         // compile it
         JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, listener, options, null, fileObjects);
         Boolean compileResult = task.call();
+
+        // If the compilation failed, remove the failed file from the pathsToCompile list and try to compile again without this file
         if (!compileResult) {
-            // If the compilation failed, remove the failed file from the pathsToCompile list and try to compile again
             File currentFile = new File(((JavaFileObject) compilationErrors.get(compilationErrors.size() - 1).getSource()).toUri().getPath());
             LOG.warn("Compilation of file '" + currentFile.getPath() + "' failed");
             files.removeIf(file -> file.getPath().equalsIgnoreCase(currentFile.getPath()));
@@ -140,7 +161,8 @@ public class JUnitTestHelper {
     }
 
     /**
-     * This function builds a classpath from the passed Strings
+     * This function builds a classpath from the passed Strings.
+     * We need this because the JUnit4 and Hamcrest libraries needs to be added.
      *
      * @param paths classpath elements
      * @return returns the complete classpath with wildcards expanded
@@ -167,8 +189,11 @@ public class JUnitTestHelper {
         return sb.toString();
     }
 
+    /**
+     * Get a List of all UnitTest files.
+     */
     private List<File> getUnitTestFiles(String assignmentDirPath, String testFolderName) {
-        String unitTestDirPath = assignmentDirPath + File.separator + testFolderName;
+        String unitTestDirPath = assignmentDirPath + File.separator + testFolderName; // e.g. /tmp/Assignment_123/UnitTests
         File unitTestDir = new File(unitTestDirPath);
         File[] unitTestFilesArray = unitTestDir.listFiles();
         List<File> unitTestFiles = new ArrayList<>();
@@ -180,12 +205,18 @@ public class JUnitTestHelper {
         return compileOutputDir;
     }
 
+    /**
+     * Custom DiagnosticListener to get the compilation errors
+     */
     private class MyDiagnosticListener implements DiagnosticListener {
         public void report(Diagnostic diagnostic) {
             compilationErrors.add(diagnostic);
         }
     }
 
+    /**
+     * Custom JUnit RunListener which enables us to record the successful and the failed tests.
+     */
     private static class MyRunListener extends RunListener {
         private Set<Description> allTests = new LinkedHashSet<>();
         private Set<Description> failedTests = new LinkedHashSet<>();
