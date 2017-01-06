@@ -74,7 +74,7 @@ public class JUnitTestHelper {
                 }
             }
             if (!currentTestCompiled) {
-                break;
+                continue;
             }
 
             String testName = Files.getNameWithoutExtension(testFile.getPath());
