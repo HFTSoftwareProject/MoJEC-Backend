@@ -1,6 +1,7 @@
 package de.hftstuttgart.rest.v1.task;
 
 import de.hftstuttgart.models.UserResult;
+import de.hftstuttgart.utils.FileUtil;
 import de.hftstuttgart.utils.JUnitTestHelper;
 import de.hftstuttgart.utils.UnzipUtil;
 import org.apache.log4j.Logger;
@@ -47,6 +48,7 @@ public class TaskUpload {
 
         List<File> unzippedFiles = UnzipUtil.unzip(taskFile);
 
+        // Run the JUnit tests on the unzipped files
         JUnitTestHelper testHelper = new JUnitTestHelper(junitLibDirPath);
         LOG.info("Uploaded File: " + taskFile);
         UserResult userResult;
@@ -60,25 +62,18 @@ public class TaskUpload {
 
     }
 
+    /**
+     * Delete all unzipped and compiled files
+     */
     private void deleteCreatedFiles(List<File> unzippedFiles, File compileOutputDir) {
-        // Delete all .java files
         for (File file : unzippedFiles) {
             if (file.exists()) {
                 file.delete();
             }
         }
 
-        // delete compiler output dir. Currently only one flat folder is supported
         if (compileOutputDir.exists()) {
-            // Delete all containing files
-            for (File file : compileOutputDir.listFiles()) {
-                if (file.exists()) {
-                    file.delete();
-                }
-            }
-            // Delete the directory.
-            compileOutputDir.delete();
+            FileUtil.deleteFolderRecursively(compileOutputDir);
         }
-
     }
 }
