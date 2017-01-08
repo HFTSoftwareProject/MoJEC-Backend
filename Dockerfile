@@ -1,6 +1,6 @@
 FROM frolvlad/alpine-oraclejdk8:slim
 VOLUME /tmp
-ADD target/mojec-backend-0.0.1-SNAPSHOT.jar app.jar
+ADD target/mojec-backend-1.0.1-SNAPSHOT.jar app.jar
 RUN sh -c 'touch /app.jar'
 
 # Prepare environment.
