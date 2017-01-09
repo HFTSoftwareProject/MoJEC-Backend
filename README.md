@@ -26,8 +26,7 @@ This is the reason why the tests are disabled by default. They can be enabled by
 ##### POST /v1/unittest
 Used for uploading / creating of assignments. The body needs to contain two fields as form data:<br/>
 *assignmentId*: The ID of the created assignment. This is created by moodle.<br/>
-*unitTestFile*: The zip file containing the unit tests for this assignment
-gnment.
+*unitTestFile*: The zip file containing the unit tests for this assignment.
 
 ##### DELETE /v1/unittest?assignmentId=<111>
 Delete the created assignment. The assignment ID of the unit tests which need to be deleted is passed as a query parameter
