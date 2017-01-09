@@ -32,7 +32,7 @@ Used for uploading / creating of assignments. The body needs to contain two fiel
 Delete the created assignment. The assignment ID of the unit tests which need to be deleted is passed as a query parameter
 
 ##### POST /v1/task
-The upload of the Java files to be tested. The body needs to contain two form fields:
-*taskFile*: The zip file containing the java files
+The upload of the Java files to be tested. The body needs to contain two form fields:<br/>
+*taskFile*: The zip file containing the java files<br/>
 *assignmentId*: The id of the assignment. Provided by moodle
 
