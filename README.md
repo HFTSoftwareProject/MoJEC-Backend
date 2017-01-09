@@ -21,3 +21,19 @@ MoJEC-Backend has some rudimentary API tests using [Spring Boot Testing](https:/
 
 To be able to run the integration tests the system where the tests are executed needs to be a *nix System because a `/tmp/` folder must exist. Also the needed libraries [JUnit](http://central.maven.org/maven2/junit/junit/4.12/junit-4.12.jar) and [Hamcrest](http://central.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar) need to be downloaded into `/opt/mojec/junit/`.
 This is the reason why the tests are disabled by default. They can be enabled by setting `-DskipTests=false`
+
+## Interfaces
+##### POST /v1/unittest
+Used for uploading / creating of assignments. The body needs to contain two fields as form data:<br/>
+*assignmentId*: The ID of the created assignment. This is created by moodle.<br/>
+*unitTestFile*: The zip file containing the unit tests for this assignment
+gnment.
+
+##### DELETE /v1/unittest?assignmentId=<111>
+Delete the created assignment. The assignment ID of the unit tests which need to be deleted is passed as a query parameter
+
+##### POST /v1/task
+The upload of the Java files to be tested. The body needs to contain two form fields:
+*taskFile*: The zip file containing the java files
+*assignmentId*: The id of the assignment. Provided by moodle
+
